@@ -2,7 +2,7 @@
 
 ## 说明
 
-参考自: https://github.com/toolgood/ToolGood.Words  
+参考自: [NewbieGameCoder/IllegalWordsDetection: 提供高效率的较简单的Unity3d手游客户端的敏感词检测的算法，能应付大部分敏感词过滤需求 (github.com)](https://github.com/NewbieGameCoder/IllegalWordsDetection)  
 使用了FastCheck的过滤方式，思路非常巧妙，效率也比较高。  
 原项目使用了指针，因为对指针不熟，所以我不用指针**重构了一遍**。
 * 代码变动较大
