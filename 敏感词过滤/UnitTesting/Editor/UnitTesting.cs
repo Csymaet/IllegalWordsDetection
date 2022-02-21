@@ -11,7 +11,7 @@ namespace Plugins.EliUtilities.敏感词过滤.UnitTesting.Editor
         private void Init()
         {
             TextAsset text = Resources.Load<TextAsset>(badWordsPath);
-            string[] badWords = text.text.Split(new[]{"\r\n"}, StringSplitOptions.RemoveEmptyEntries);
+            string[] badWords = text.text.Split(new[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
             BadWordsDetection.Init(badWords);
         }
         
