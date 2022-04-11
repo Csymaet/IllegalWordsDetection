@@ -5,8 +5,9 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Text;
+using UnityEngine;
 
-namespace Plugins.EliUtilities.敏感词过滤
+namespace EliTools.IllegalWordsDetection.Scripts
 {
     public static class BadWordsDetection
     {
@@ -25,11 +26,24 @@ namespace Plugins.EliUtilities.敏感词过滤
                                                     "≈≡≠＝≤≥＜＞≮≯∷±＋－×÷／∫∮∝∞∧∨∑∏∪∩∈∵∴⊥∥∠⌒⊙≌∽√§№☆★○●◎◇◆□℃‰€■△▲※→←↑↓〓¤°＃＆＠＼︿＿￣―♂♀" +
                                                     "┌┍┎┐┑┒┓─┄┈├┝┞┟┠┡┢┣│┆┊┬┭┮┯┰┱┲┳┼┽┾┿╀╁╂╃└┕┖┗┘┙┚┛━┅┉┤┥┦┧┨┩┪┫┃┇┋┴┵┶┷┸┹┺┻╋╊╉╈╇╆╅╄";
     
+        static BadWordsDetection()
+        {
+            TextAsset text = Resources.Load<TextAsset>("TempRes/BadWords");
+            string[] badWords = text.text.Split(new[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
+            Init(badWords);
+        }
+
+        // 调用此方法时会自动调用静态方法初始化, 通常不需要调用此方法来主动初始化，除非第一次使用此类不是在主线程
+        public static void Init()
+        {
+            
+        }
+        
         /// <summary>
         /// 初始化
         /// </summary>
         /// <param name="badWords"></param>
-        public static void Init(string[] badWords)
+        private static void Init(string[] badWords)
         {
             if (badWords == null || badWords.Length == 0)
                 return;

@@ -1,25 +1,15 @@
-﻿using System;
-using NUnit.Framework;
+﻿using NUnit.Framework;
 using UnityEngine;
 
-namespace Plugins.EliUtilities.敏感词过滤.UnitTesting.Editor
+namespace EliTools.IllegalWordsDetection.Scripts.UnitTesting.Editor
 {
     public class UnitTesting : MonoBehaviour
     {
         private string badWordsPath = "TempRes/屏蔽字库";
         
-        private void Init()
-        {
-            TextAsset text = Resources.Load<TextAsset>(badWordsPath);
-            string[] badWords = text.text.Split(new[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
-            BadWordsDetection.Init(badWords);
-        }
-        
         [Test]
         public void TestIsExistBadWords()
         {
-            Init();
-
             // 测试敏感词"官方"和"sex"
             Assert.IsFalse(BadWordsDetection.IsExistBadWords("abc"));
             Assert.IsFalse(BadWordsDetection.IsExistBadWords("a"));
@@ -78,8 +68,6 @@ namespace Plugins.EliUtilities.敏感词过滤.UnitTesting.Editor
         [Test]
         public void TestFilter()
         {
-            Init();
-
             // 测试敏感词"官方"和"sex"
             Assert.AreEqual(BadWordsDetection.Filter("abc"), "abc");
             Assert.AreEqual(BadWordsDetection.Filter("a"), "a");
