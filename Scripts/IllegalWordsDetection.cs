@@ -9,13 +9,13 @@ using UnityEngine;
 
 namespace EliTools.IllegalWordsDetection.Scripts
 {
-    public static class BadWordsDetection
+    public static class IllegalWordsDetection
     {
-        private static HashSet<string> badWordSet = new HashSet<string>();
-        private static byte[] charPos_InAllBadWords = new byte[char.MaxValue];  // 存了某一个字在所有敏感词中的位置，（超出8个的截断为第8个位置）
+        private static HashSet<string> illegalWordSet = new HashSet<string>();
+        private static byte[] charPos_InAllIllegalWords = new byte[char.MaxValue];  // 存了某一个字在所有敏感词中的位置，（超出8个的截断为第8个位置）
         private static byte[] lengths_StartWithKey = new byte[char.MaxValue];   // 存储了以key开关的敏感词的长度信息，超过8会截断为8
         private static byte[] maxLength_StartWithKey = new byte[char.MaxValue];
-        private static BitArray isHasBadWord_EndWithKey = new BitArray(char.MaxValue);
+        private static BitArray isHasIllegalWord_EndWithKey = new BitArray(char.MaxValue);
         private static BitArray toSkipBitArray = new BitArray(char.MaxValue);
         private static readonly string toSkipList = " \t\r\n" +
                                                     "`~!@#$%^&*()_+-=[]\\;',./{}|:\"<>?"+
@@ -26,11 +26,11 @@ namespace EliTools.IllegalWordsDetection.Scripts
                                                     "≈≡≠＝≤≥＜＞≮≯∷±＋－×÷／∫∮∝∞∧∨∑∏∪∩∈∵∴⊥∥∠⌒⊙≌∽√§№☆★○●◎◇◆□℃‰€■△▲※→←↑↓〓¤°＃＆＠＼︿＿￣―♂♀" +
                                                     "┌┍┎┐┑┒┓─┄┈├┝┞┟┠┡┢┣│┆┊┬┭┮┯┰┱┲┳┼┽┾┿╀╁╂╃└┕┖┗┘┙┚┛━┅┉┤┥┦┧┨┩┪┫┃┇┋┴┵┶┷┸┹┺┻╋╊╉╈╇╆╅╄";
     
-        static BadWordsDetection()
+        static IllegalWordsDetection()
         {
-            TextAsset text = Resources.Load<TextAsset>("TempRes/BadWords");
-            string[] badWords = text.text.Split(new[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
-            Init(badWords);
+            TextAsset text = Resources.Load<TextAsset>("TempRes/IllegalWords");
+            string[] illegalWords = text.text.Split(new[]{"\r\n", "\n"}, StringSplitOptions.RemoveEmptyEntries);
+            Init(illegalWords);
         }
 
         // 调用此方法时会自动调用静态方法初始化, 通常不需要调用此方法来主动初始化，除非第一次使用此类不是在主线程
@@ -42,10 +42,10 @@ namespace EliTools.IllegalWordsDetection.Scripts
         /// <summary>
         /// 初始化
         /// </summary>
-        /// <param name="badWords"></param>
-        private static void Init(string[] badWords)
+        /// <param name="illegalWords"></param>
+        private static void Init(string[] illegalWords)
         {
-            if (badWords == null || badWords.Length == 0)
+            if (illegalWords == null || illegalWords.Length == 0)
                 return;
 
             // 1. 记录SymbolsToSkip
@@ -54,49 +54,49 @@ namespace EliTools.IllegalWordsDetection.Scripts
                 toSkipBitArray[@char] = true;
             }
             
-            foreach (var item in badWords)
+            foreach (var item in illegalWords)
             {
-                string badWord = item.Trim();   // 去空格
-                badWord = RemoveSymbolsToSkip(badWord); // 去符号
-                if(string.IsNullOrEmpty(badWord))
+                string illegalWord = item.Trim();   // 去空格
+                illegalWord = RemoveSymbolsToSkip(illegalWord); // 去符号
+                if(string.IsNullOrEmpty(illegalWord))
                     continue;
 
-                badWord = badWord.ToLower();  // 变小写
+                illegalWord = illegalWord.ToLower();  // 变小写
                 
-                int badWordLength = badWord.Length;
+                int illegalWordLength = illegalWord.Length;
 
-                // 2. 记录badWord每个字符的位置信息
-                for (int i = 0; i < badWordLength; i++)
+                // 2. 记录illegalWord每个字符的位置信息
+                for (int i = 0; i < illegalWordLength; i++)
                 {
                     if (i < 7)
                     {
-                        charPos_InAllBadWords[badWord[i]] |= (byte)(1 << i);
+                        charPos_InAllIllegalWords[illegalWord[i]] |= (byte)(1 << i);
                     }
                     else
                     {
-                        charPos_InAllBadWords[badWord[i]] |= 0x80;
+                        charPos_InAllIllegalWords[illegalWord[i]] |= 0x80;
                     }
                 }
             
-                int badWordLength_MaxIs8 = Math.Min(8, badWordLength);
-                int badWordLength_MaxIs255 = Math.Min(byte.MaxValue, badWordLength);
-                char firstChar = badWord[0];
-                char lastChar = badWord[badWordLength - 1];
+                int illegalWordLength_MaxIs8 = Math.Min(8, illegalWordLength);
+                int illegalWordLength_MaxIs255 = Math.Min(byte.MaxValue, illegalWordLength);
+                char firstChar = illegalWord[0];
+                char lastChar = illegalWord[illegalWordLength - 1];
             
                 // 3. 记录长度，截断为8
-                lengths_StartWithKey[firstChar] |= (byte) (1 << (badWordLength_MaxIs8 - 1));
+                lengths_StartWithKey[firstChar] |= (byte) (1 << (illegalWordLength_MaxIs8 - 1));
                 // 4. 记录最大长度，截断为255
-                if (maxLength_StartWithKey[firstChar] < badWordLength_MaxIs255)
+                if (maxLength_StartWithKey[firstChar] < illegalWordLength_MaxIs255)
                 {
-                    maxLength_StartWithKey[firstChar] = (byte) (badWordLength_MaxIs255);
+                    maxLength_StartWithKey[firstChar] = (byte) (illegalWordLength_MaxIs255);
                 }
                 
                 // 5. 记录最后一个字符
-                isHasBadWord_EndWithKey[lastChar] = true;
+                isHasIllegalWord_EndWithKey[lastChar] = true;
             
-                // 6. 记录badWords
-                if (!badWordSet.Contains(badWord))
-                    badWordSet.Add(badWord);
+                // 6. 记录illegalWords
+                if (!illegalWordSet.Contains(illegalWord))
+                    illegalWordSet.Add(illegalWord);
             }
         }
     
@@ -105,7 +105,7 @@ namespace EliTools.IllegalWordsDetection.Scripts
         /// </summary>
         /// <param name="text"></param>
         /// <returns></returns>
-        public static bool IsExistBadWords(string text)
+        public static bool IsExistIllegalWords(string text)
         {
             text = RemoveSymbolsToSkip(text);
             if (string.IsNullOrEmpty(text))
@@ -115,20 +115,20 @@ namespace EliTools.IllegalWordsDetection.Scripts
             int curCharIndex = 0;
             for (; curCharIndex < text.Length; curCharIndex++)
             {
-                curCharIndex = FindFirstChar_IsFirstCharOfBadWords(text, curCharIndex);
+                curCharIndex = FindFirstChar_IsFirstCharOfIllegalWords(text, curCharIndex);
 
                 if (curCharIndex >= text.Length)
                 {
                     return false;
                 }
 
-                if (HasBadWord_LengthIs1_StartWithKey(text[curCharIndex]))
+                if (HasIllegalWord_LengthIs1_StartWithKey(text[curCharIndex]))
                 {
                     return true;
                 }
             
-                // 执行到这里，说明curChar是某个badWord的第一个字符，且这个badWord长度不为1
-                if (HasBadWord_StartWithCurPos(text, curCharIndex))
+                // 执行到这里，说明curChar是某个illegalWord的第一个字符，且这个illegalWord长度不为1
+                if (HasIllegalWord_StartWithCurPos(text, curCharIndex))
                 {
                     return true;
                 }
@@ -147,12 +147,12 @@ namespace EliTools.IllegalWordsDetection.Scripts
             text = RemoveSymbolsToSkip(text, out var removedDic);
             StringBuilder textSb = new StringBuilder(text);
 
-            var badWordDic = DetectBadWords(text);
+            var illegalWordDic = DetectIllegalWords(text);
 
             // 敏感词替换为mask
-            foreach (var badWordInfo in badWordDic)
+            foreach (var illegalWordInfo in illegalWordDic)
             {
-                for (int i = badWordInfo.Key; i < badWordInfo.Key + badWordInfo.Value; i++)
+                for (int i = illegalWordInfo.Key; i < illegalWordInfo.Key + illegalWordInfo.Value; i++)
                 {
                     textSb[i] = mask;
                 }
@@ -168,7 +168,7 @@ namespace EliTools.IllegalWordsDetection.Scripts
         /// </summary>
         /// <param name="text_RemovedSymbolToSkip">传入已移除 toSkipList中的符号 的文本</param>
         /// <returns>返回值参数说明,result: [startIndex, length]</returns>
-        private static Dictionary<int, int> DetectBadWords(string text_RemovedSymbolToSkip)
+        private static Dictionary<int, int> DetectIllegalWords(string text_RemovedSymbolToSkip)
         {
             string text = text_RemovedSymbolToSkip;
             var result = new Dictionary<int, int>();
@@ -180,20 +180,20 @@ namespace EliTools.IllegalWordsDetection.Scripts
             int curCharIndex = 0;
             for (; curCharIndex < text.Length; curCharIndex++)
             {
-                curCharIndex = FindFirstChar_IsFirstCharOfBadWords(text, curCharIndex);
+                curCharIndex = FindFirstChar_IsFirstCharOfIllegalWords(text, curCharIndex);
 
                 if (curCharIndex >= text.Length)
                 {
                     return result;
                 }
             
-                if (HasBadWord_LengthIs1_StartWithKey(text[curCharIndex]))
+                if (HasIllegalWord_LengthIs1_StartWithKey(text[curCharIndex]))
                 {
                     result.Add(curCharIndex, 1);
                     continue;
                 }
             
-                if (HasBadWord_StartWithCurPos(text, curCharIndex, out int endIndex))
+                if (HasIllegalWord_StartWithCurPos(text, curCharIndex, out int endIndex))
                 {
                     result.Add(curCharIndex, endIndex - curCharIndex + 1);
                     continue;
@@ -204,16 +204,16 @@ namespace EliTools.IllegalWordsDetection.Scripts
         }
 
         /// <summary>
-        /// 从curCharIndex开始，查找一个字符，这个字符是某个badWord的首字符
+        /// 从curCharIndex开始，查找一个字符，这个字符是某个illegalWord的首字符
         /// </summary>
         /// <param name="text"></param>
         /// <param name="curCharIndex"></param>
         /// <returns></returns>
-        private static int FindFirstChar_IsFirstCharOfBadWords(string text, int curCharIndex)
+        private static int FindFirstChar_IsFirstCharOfIllegalWords(string text, int curCharIndex)
         {
             while (curCharIndex < text.Length)
             {
-                if (IsFirstCharOfBadWords(text[curCharIndex]))
+                if (IsFirstCharOfIllegalWords(text[curCharIndex]))
                 {
                     break;
                 }
@@ -227,24 +227,24 @@ namespace EliTools.IllegalWordsDetection.Scripts
         }
 
         /// <summary>
-        /// 从当前位置开始，是否可找到BadWord
+        /// 从当前位置开始，是否可找到IllegalWord
         /// </summary>
         /// <param name="text"></param>
         /// <param name="curCharIndex"></param>
         /// <returns></returns>
-        private static bool HasBadWord_StartWithCurPos(string text, int curCharIndex)
+        private static bool HasIllegalWord_StartWithCurPos(string text, int curCharIndex)
         {
-            return HasBadWord_StartWithCurPos(text, curCharIndex, out int endIndex);
+            return HasIllegalWord_StartWithCurPos(text, curCharIndex, out int endIndex);
         }
 
         /// <summary>
-        /// 从当前位置开始，是否可找到BadWord
+        /// 从当前位置开始，是否可找到IllegalWord
         /// </summary>
         /// <param name="text"></param>
-        /// <param name="curCharIndex">前提是，处于curCharIndex的字符是某个badWord的起始字符</param>
-        /// <param name="endIndex">所找到的badWord的结束索引</param>
+        /// <param name="curCharIndex">前提是，处于curCharIndex的字符是某个illegalWord的起始字符</param>
+        /// <param name="endIndex">所找到的illegalWord的结束索引</param>
         /// <returns></returns>
-        private static bool HasBadWord_StartWithCurPos(string text, int curCharIndex, out int endIndex)
+        private static bool HasIllegalWord_StartWithCurPos(string text, int curCharIndex, out int endIndex)
         {
             endIndex = 0;
         
@@ -256,11 +256,11 @@ namespace EliTools.IllegalWordsDetection.Scripts
                     return false;
                 }
 
-                if (IsNthCharOfBadWords(text[curCharIndex + i], i))
+                if (IsNthCharOfIllegalWords(text[curCharIndex + i], i))
                 {
-                    if (IsEndCharOfBadWords(text[curCharIndex + i]))
+                    if (IsEndCharOfIllegalWords(text[curCharIndex + i]))
                     {
-                        if (badWordSet.Contains(text.Substring(curCharIndex, i + 1)))
+                        if (illegalWordSet.Contains(text.Substring(curCharIndex, i + 1)))
                         {
                             endIndex = curCharIndex + i;
                             return true;
@@ -277,10 +277,10 @@ namespace EliTools.IllegalWordsDetection.Scripts
         }
     
         /// <summary>
-        /// 判断某字符是不是某一badWord的首字符
+        /// 判断某字符是不是某一illegalWord的首字符
         /// </summary>
         /// <returns></returns>
-        private static bool IsFirstCharOfBadWords(char @char)
+        private static bool IsFirstCharOfIllegalWords(char @char)
         {
             return maxLength_StartWithKey[@char] > 0;
         }
@@ -289,32 +289,32 @@ namespace EliTools.IllegalWordsDetection.Scripts
         /// 是否有一个敏感词的长度为1，且以传入的字符开头
         /// </summary>
         /// <returns></returns>
-        private static bool HasBadWord_LengthIs1_StartWithKey(char @char)
+        private static bool HasIllegalWord_LengthIs1_StartWithKey(char @char)
         {
             return (lengths_StartWithKey[@char] & 0x01) == 0x01;
         }
 
         /// <summary>
-        /// 判断某字符是不是某一badWord的第n个字符
+        /// 判断某字符是不是某一illegalWord的第n个字符
         /// </summary>
         /// <param name="char"></param>
         /// <param name="nth">n从0开始计数</param>
         /// <returns></returns>
-        private static bool IsNthCharOfBadWords(char @char, int nth)
+        private static bool IsNthCharOfIllegalWords(char @char, int nth)
         {
-            byte value1 = charPos_InAllBadWords[@char];
+            byte value1 = charPos_InAllIllegalWords[@char];
             byte value2 = (byte) (1 << nth);
             return (value1 & value2)  == value2;
         }
 
         /// <summary>
-        /// 判断某字符是否是某badWord的尾字符
+        /// 判断某字符是否是某illegalWord的尾字符
         /// </summary>
         /// <param name="char"></param>
         /// <returns></returns>
-        private static bool IsEndCharOfBadWords(char @char)
+        private static bool IsEndCharOfIllegalWords(char @char)
         {
-            return isHasBadWord_EndWithKey[@char];
+            return isHasIllegalWord_EndWithKey[@char];
         }
 
         /// <summary>
